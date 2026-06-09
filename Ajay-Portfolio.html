@@ -1,0 +1,856 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Ajay Vishwakarma — Terminal Portfolio</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&display=swap');
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg:         #0b0e14;
+    --bg2:        #0f1319;
+    --bg3:        #141924;
+    --border:     #1e2736;
+    --green:      #39ff8a;
+    --green-dim:  #1e8c4e;
+    --green-faint:#0d3322;
+    --yellow:     #f5c842;
+    --yellow-dim: #7a6219;
+    --cyan:       #56d4f5;
+    --orange:     #ff9f43;
+    --purple:     #a29bfe;
+    --red:        #ff5f6d;
+    --white:      #d4dce8;
+    --gray:       #5a6a80;
+    --glow:       0 0 8px rgba(57,255,138,0.35);
+    --glow-sm:    0 0 4px rgba(57,255,138,0.2);
+  }
+
+  html, body {
+    height: 100%;
+    background: var(--bg);
+    color: var(--green);
+    font-family: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace;
+    font-size: 14px;
+    line-height: 1.65;
+    overflow: hidden;
+  }
+
+  .window {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    max-width: 980px;
+    margin: 0 auto;
+    border-left: 1px solid var(--border);
+    border-right: 1px solid var(--border);
+    background: var(--bg);
+    position: relative;
+  }
+
+  /* ── TITLE BAR ── */
+  .titlebar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 16px;
+    background: var(--bg3);
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+    user-select: none;
+  }
+  .dots { display: flex; gap: 7px; }
+  .dot  { width: 13px; height: 13px; border-radius: 50%; }
+  .dot-r { background: #ff5f56; box-shadow: 0 0 6px #ff5f5680; }
+  .dot-y { background: #febc2e; box-shadow: 0 0 6px #febc2e80; }
+  .dot-g { background: #28c840; box-shadow: 0 0 6px #28c84080; }
+  .titlebar-label { margin: 0 auto; color: var(--gray); font-size: 12px; letter-spacing: 0.08em; }
+
+  /* ── TERMINAL BODY ── */
+  #terminal {
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px 24px 10px;
+    scroll-behavior: smooth;
+    background:
+      radial-gradient(ellipse at 85% 0%, rgba(57,255,138,0.045) 0%, transparent 55%),
+      radial-gradient(ellipse at 15% 100%, rgba(86,212,245,0.025) 0%, transparent 50%),
+      var(--bg);
+  }
+  #terminal::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.045) 2px, rgba(0,0,0,0.045) 4px);
+    pointer-events: none;
+    z-index: 10;
+  }
+  #terminal::-webkit-scrollbar { width: 5px; }
+  #terminal::-webkit-scrollbar-track { background: var(--bg2); }
+  #terminal::-webkit-scrollbar-thumb { background: var(--green-dim); border-radius: 3px; }
+
+  /* ── BASE TEXT ── */
+  .line { margin: 0; white-space: pre-wrap; word-break: break-word; }
+  .c-green  { color: var(--green); }
+  .c-yellow { color: var(--yellow); }
+  .c-cyan   { color: var(--cyan); }
+  .c-orange { color: var(--orange); }
+  .c-purple { color: var(--purple); }
+  .c-gray   { color: var(--gray); }
+  .c-white  { color: var(--white); }
+  .c-red    { color: var(--red); }
+  .c-gdim   { color: var(--green-dim); }
+
+  .prompt-echo { color: var(--green-dim); }
+  .prompt-echo .cmd-part { color: var(--green); font-weight: 600; }
+
+  /* ── BANNER ── */
+  .banner-block {
+    border: 1px solid var(--green-dim);
+    border-radius: 5px;
+    padding: 18px 22px;
+    margin-bottom: 18px;
+    background: var(--green-faint);
+    box-shadow: var(--glow), inset 0 0 40px rgba(57,255,138,0.025);
+    position: relative;
+    overflow: hidden;
+  }
+  .banner-block::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--green), transparent);
+  }
+  .banner-ascii {
+    color: var(--green);
+    font-size: 11px;
+    line-height: 1.3;
+    text-shadow: var(--glow-sm);
+    white-space: pre;
+    letter-spacing: 0.05em;
+  }
+  .banner-name  { font-size: 20px; font-weight: 700; color: var(--green); text-shadow: var(--glow); letter-spacing: 0.05em; margin-top: 8px; }
+  .banner-title { color: var(--yellow); font-size: 12px; font-weight: 600; letter-spacing: 0.15em; text-transform: uppercase; margin-top: 3px; }
+  .banner-stack { margin-top: 10px; display: flex; flex-wrap: wrap; gap: 5px; }
+  .banner-tag   { background: rgba(57,255,138,0.1); border: 1px solid var(--green-dim); border-radius: 3px; padding: 1px 8px; font-size: 11px; color: var(--green); }
+  .banner-meta  { margin-top: 10px; color: var(--gray); font-size: 12px; line-height: 1.8; }
+  .banner-meta span { color: var(--white); }
+  .banner-hint  { margin-top: 12px; color: var(--green-dim); font-size: 11.5px; border-top: 1px solid #1e2736; padding-top: 10px; }
+  .banner-hint b { color: var(--green); }
+
+  /* ── SECTION HEADER ── */
+  .section-header {
+    color: var(--yellow);
+    font-weight: 700;
+    font-size: 12.5px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    border-bottom: 1px solid var(--yellow-dim);
+    padding-bottom: 4px;
+    margin: 14px 0 10px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  /* ── COMPANY CARD ── */
+  .company-card {
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--green);
+    border-radius: 4px;
+    padding: 12px 16px;
+    margin: 8px 0;
+    background: rgba(57,255,138,0.03);
+  }
+  .company-card .co-name  { color: var(--green); font-weight: 700; font-size: 14px; }
+  .company-card .co-role  { color: var(--yellow); font-size: 12.5px; font-weight: 600; margin-top: 2px; }
+  .company-card .co-meta  { color: var(--gray); font-size: 11.5px; margin-top: 3px; display: flex; flex-wrap: wrap; gap: 12px; }
+  .company-card .co-meta span { color: var(--cyan); }
+
+  /* ── SUBSECTION ── */
+  .subsec {
+    margin: 10px 0 4px 0;
+    color: var(--cyan);
+    font-size: 11.5px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .subsec::before { content: '──'; color: var(--border); }
+  .subsec::after  { content: '──────────────────'; color: var(--border); flex: 1; overflow: hidden; letter-spacing: 0.01em; }
+
+  /* ── BULLET ── */
+  .bullet {
+    display: flex;
+    gap: 8px;
+    padding: 3px 0 3px 4px;
+    color: var(--white);
+    font-size: 12.5px;
+    line-height: 1.6;
+    align-items: flex-start;
+  }
+  .bullet .b-arrow { color: var(--green); flex-shrink: 0; margin-top: 1px; }
+  .bullet .b-text  { flex: 1; }
+  .bullet .b-text .kw { color: var(--yellow); font-weight: 600; }
+  .bullet .b-text .tech { color: var(--cyan); }
+  .bullet .b-text .val  { color: var(--orange); }
+
+  /* ── PROJECT CARD ── */
+  .proj-card {
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--cyan);
+    border-radius: 4px;
+    padding: 12px 16px;
+    margin: 8px 0;
+    background: rgba(86,212,245,0.02);
+  }
+  .proj-card .proj-name { color: var(--cyan); font-weight: 700; font-size: 13.5px; }
+  .proj-card .proj-type { color: var(--gray); font-size: 11.5px; margin-top: 2px; }
+  .proj-card .proj-stack { margin-top: 8px; display: flex; flex-wrap: wrap; gap: 4px; }
+
+  /* ── SKILL SECTIONS ── */
+  .skill-group {
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 10px 14px;
+    margin: 6px 0;
+    background: rgba(255,255,255,0.01);
+  }
+  .skill-group:hover { border-color: var(--green-dim); background: rgba(57,255,138,0.02); }
+  .sg-label { color: var(--yellow); font-size: 11.5px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; margin-bottom: 7px; }
+  .sg-items { display: flex; flex-wrap: wrap; gap: 5px; }
+
+  /* ── TAGS ── */
+  .tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    border-radius: 3px;
+    padding: 2px 8px;
+    font-size: 11px;
+    font-weight: 500;
+    white-space: nowrap;
+  }
+  .tag-green  { background: rgba(57,255,138,0.1);  border: 1px solid rgba(57,255,138,0.3);  color: var(--green); }
+  .tag-cyan   { background: rgba(86,212,245,0.1);  border: 1px solid rgba(86,212,245,0.3);  color: var(--cyan); }
+  .tag-yellow { background: rgba(245,200,66,0.1);  border: 1px solid rgba(245,200,66,0.3);  color: var(--yellow); }
+  .tag-orange { background: rgba(255,159,67,0.1);  border: 1px solid rgba(255,159,67,0.3);  color: var(--orange); }
+  .tag-purple { background: rgba(162,155,254,0.1); border: 1px solid rgba(162,155,254,0.3); color: var(--purple); }
+  .tag-gray   { background: rgba(90,106,128,0.15); border: 1px solid rgba(90,106,128,0.3);  color: var(--gray); }
+
+  /* ── EDU CARD ── */
+  .edu-card {
+    border-left: 3px solid var(--purple);
+    padding: 8px 0 8px 14px;
+    margin: 6px 0;
+  }
+  .edu-card .edu-deg  { color: var(--white); font-weight: 600; font-size: 13px; }
+  .edu-card .edu-inst { color: var(--cyan); font-size: 12px; margin-top: 1px; }
+  .edu-card .edu-meta { color: var(--gray); font-size: 11.5px; margin-top: 2px; }
+  .edu-card .edu-score { color: var(--green); }
+
+  /* ── HELP TABLE ── */
+  .help-row { display: grid; grid-template-columns: 140px 1fr; gap: 4px; padding: 3px 0; font-size: 12.5px; }
+  .help-cmd  { color: var(--green); font-weight: 600; }
+  .help-desc { color: var(--gray); }
+
+  /* ── CONTACT ── */
+  .contact-row { display: grid; grid-template-columns: 96px 1fr; gap: 6px; padding: 4px 0; font-size: 12.5px; align-items: center; }
+  .contact-key { color: var(--yellow); }
+  .contact-val { color: var(--white); }
+
+  /* ── DIVIDER ── */
+  .divider { border: none; border-top: 1px solid var(--border); margin: 12px 0; }
+
+  /* ── INPUT ROW ── */
+  .input-area {
+    display: flex;
+    align-items: center;
+    padding: 10px 24px 14px;
+    background: var(--bg2);
+    border-top: 1px solid var(--border);
+    flex-shrink: 0;
+  }
+  .ps1 { white-space: nowrap; font-size: 13.5px; font-weight: 600; user-select: none; flex-shrink: 0; }
+  .ps1-user   { color: var(--green); text-shadow: var(--glow-sm); }
+  .ps1-sep    { color: var(--gray); }
+  .ps1-dir    { color: var(--cyan); }
+  .ps1-dollar { color: var(--yellow); margin-right: 9px; }
+
+  #cmd-input {
+    flex: 1; background: transparent; border: none; outline: none;
+    color: var(--green); font-family: inherit; font-size: 13.5px;
+    font-weight: 500; caret-color: var(--green); min-width: 0;
+  }
+  #cmd-input::selection { background: rgba(57,255,138,0.25); }
+  #cmd-input::placeholder { color: var(--gray); opacity: 0.5; }
+
+  /* ── ANIMATIONS ── */
+  @keyframes fadein { from{opacity:0;transform:translateY(5px)} to{opacity:1;transform:none} }
+  .output-block { animation: fadein 0.18s ease; }
+
+  /* ── MOBILE ── */
+  @media (max-width: 640px) {
+    html, body { font-size: 12px; }
+    .window { border: none; }
+    #terminal { padding: 14px 14px 6px; }
+    .input-area { padding: 8px 14px 10px; }
+    .banner-ascii { display: none; }
+    .banner-name { font-size: 17px; }
+    .help-row { grid-template-columns: 110px 1fr; }
+    .contact-row { grid-template-columns: 80px 1fr; }
+    .subsec::after { display: none; }
+  }
+</style>
+</head>
+<body>
+<div class="window">
+
+  <div class="titlebar">
+    <div class="dots">
+      <div class="dot dot-r"></div>
+      <div class="dot dot-y"></div>
+      <div class="dot dot-g"></div>
+    </div>
+    <div class="titlebar-label">ajay@portfolio — bash — 100×40</div>
+  </div>
+
+  <div id="terminal"></div>
+
+  <div class="input-area">
+    <span class="ps1">
+      <span class="ps1-user">ajay</span><span class="ps1-sep">@</span><span class="ps1-user">portfolio</span><span class="ps1-sep">:</span><span class="ps1-dir">~</span><span class="ps1-dollar"> $</span>
+    </span>
+    <input id="cmd-input" type="text" autocomplete="off" autocorrect="off"
+           autocapitalize="off" spellcheck="false" autofocus placeholder="type a command…" />
+  </div>
+
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════════
+//  DATA
+// ═══════════════════════════════════════════════════════════
+const DATA = {
+
+  about: {
+    name: "Ajay Vishwakarma",
+    title: "Data Engineer",
+    location: "Bangalore, India",
+    email: "msv15544@gmail.com",
+    phone: "+91-9009046585",
+    linkedin: "linkedin.com/in/Ajay",
+    summary: "Data Engineer at Tata Consultancy Services with hands-on expertise in PySpark, AWS data services (Glue, S3, Athena, Lambda), Snowflake, and dbt. Experienced in end-to-end ELT pipeline design, distributed data processing, enterprise analytics platforms, and BI reporting."
+  },
+
+  experience: [
+    {
+      company: "Tata Consultancy Services",
+      role: "Data Engineer",
+      client: "Client: AVIVA",
+      duration: "Feb 2024 – July 2025",
+      location: "Bangalore, India",
+      stack: ["PySpark", "AWS Glue", "Amazon S3", "Snowflake", "dbt", "SQL/PL-SQL", "Python", "AWS Lambda", "Athena", "TWS", "Power BI", "Tableau"],
+      sections: [
+        {
+          title: "Big Data & Distributed Processing",
+          icon: "⚡",
+          bullets: [
+            { text: "Built scalable, distributed data processing pipelines using <kw>PySpark</kw>, leveraging <tech>DataFrames</tech>, <tech>RDDs</tech>, and <tech>Spark SQL</tech> to handle large-scale structured and semi-structured datasets with high throughput." },
+            { text: "Designed optimised <kw>Spark jobs</kw> with partition pruning, broadcast joins, and caching strategies, significantly improving processing performance on multi-terabyte datasets." },
+            { text: "Developed reusable <kw>PySpark transformation modules</kw> in Python — encapsulating common patterns such as null handling, deduplication, schema enforcement, and type casting — to ensure consistency across all data pipelines." },
+            { text: "Applied <tech>Spark SQL</tech> for complex analytical transformations including window functions, aggregations, and multi-table joins on distributed datasets." }
+          ]
+        },
+        {
+          title: "AWS Cloud & Data Engineering",
+          icon: "☁",
+          bullets: [
+            { text: "Designed and maintained production-grade data pipelines on <kw>Amazon Web Services (AWS)</kw>, covering the full lifecycle: ingestion, transformation, storage, and serving layers." },
+            { text: "Built <kw>AWS Glue</kw> ETL jobs for automated data cataloguing, schema discovery, and transformation — integrating with the Glue Data Catalog to maintain a centralised metadata store across S3-based data lakes." },
+            { text: "Managed scalable, cost-efficient raw and processed data storage on <kw>Amazon S3</kw>, implementing folder partitioning strategies (by date, region, and entity) and lifecycle policies to optimise storage cost and query performance." },
+            { text: "Developed event-driven microservices using <kw>AWS Lambda</kw> to trigger pipeline execution on S3 file arrival events, enabling near-real-time data processing without manual intervention." },
+            { text: "Used <kw>Amazon Athena</kw> for serverless ad-hoc querying on S3 data lakes, enabling fast and cost-effective analytics without data movement." },
+            { text: "Configured <kw>AWS Lake Formation</kw> for fine-grained access control, data cataloguing, and governance — enforcing row-level and column-level security on the data lake." },
+            { text: "Developed reusable and modular data engineering components in <kw>Python</kw> on AWS, improving pipeline scalability, maintainability, and cross-team reusability." }
+          ]
+        },
+        {
+          title: "Snowflake Data Warehousing",
+          icon: "❄",
+          bullets: [
+            { text: "Designed and implemented scalable <kw>Snowflake</kw> data warehousing solutions — including multi-layer schemas (raw, staging, marts) — to support enterprise analytics and reporting workloads." },
+            { text: "Engineered high-performance data ingestion pipelines into Snowflake from multiple file formats: <tech>Parquet</tech>, <tech>Iceberg</tech>, <tech>JSON</tech>, and <tech>CSV</tech> — handling schema validation, data quality checks, and performance optimisation at each stage." },
+            { text: "Leveraged <tech>Snowflake Streams</tech> and <tech>Tasks</tech> for change data capture (CDC) and incremental data loading, reducing full-load durations and processing costs." },
+            { text: "Implemented <kw>Snowflake clustering keys</kw> and micro-partition pruning strategies on large fact tables to accelerate query execution for analytical workloads." },
+            { text: "Configured Snowflake <kw>Virtual Warehouses</kw> with auto-suspend and auto-resume policies to balance compute cost and query responsiveness in production environments." }
+          ]
+        },
+        {
+          title: "ELT & dbt Data Modeling",
+          icon: "🔧",
+          bullets: [
+            { text: "Built modular, layered <kw>ELT pipelines using dbt</kw> integrated with Snowflake — structuring data models across staging, intermediate, and mart layers for clean, analytics-ready datasets." },
+            { text: "Implemented <tech>dbt tests</tech> (not-null, unique, accepted-values, referential integrity) to enforce data quality and catch regressions early in the pipeline lifecycle." },
+            { text: "Used <tech>dbt macros</tech>, <tech>Jinja templating</tech>, and <tech>ref()/source()</tech> functions to create version-controlled, reusable, and self-documenting SQL transformation logic." },
+            { text: "Leveraged <kw>dbt documentation</kw> and DAG visualisation to maintain lineage transparency and enable cross-team understanding of data flow from source to consumption layer." },
+            { text: "Managed dbt project lifecycle — model dependencies, incremental materialisation strategies, and environment-specific variable configurations — for both development and production deployments." }
+          ]
+        },
+        {
+          title: "SQL, PL/SQL & Query Engineering",
+          icon: "🗄",
+          bullets: [
+            { text: "Authored advanced <kw>SQL</kw> queries involving CTEs, window functions (RANK, DENSE_RANK, LAG, LEAD), recursive queries, and multi-level aggregations for complex business reporting requirements." },
+            { text: "Developed <kw>PL/SQL</kw> stored procedures, functions, and triggers for automated data validation, transformation, and exception handling in batch processing workflows." },
+            { text: "Performed SQL <kw>query optimisation</kw> — including execution plan analysis, index strategy, partition elimination, and join order tuning — to reduce query runtime on high-volume datasets." },
+            { text: "Designed and maintained <tech>analytical SQL models</tech> for revenue tracking, user behaviour analysis, order lifecycle metrics, and KPI reporting across business units." }
+          ]
+        },
+        {
+          title: "Job Scheduling & Orchestration",
+          icon: "📅",
+          bullets: [
+            { text: "Managed and monitored production batch data pipelines using <kw>IBM Tivoli Workload Scheduler (TWS)</kw> — defining job streams, dependencies, and alerting rules for reliable end-to-end automation." },
+            { text: "Configured pipeline scheduling with retry logic, dependency chains, and SLA-based alerting to ensure timely data availability for downstream reporting and analytics consumers." },
+            { text: "Actively contributed to <kw>end-to-end Data Engineer project delivery</kw> — owning tasks across ingestion, ELT processing, orchestration, and analytics layers on production systems." }
+          ]
+        },
+        {
+          title: "Analytics & BI Reporting",
+          icon: "📊",
+          bullets: [
+            { text: "Developed interactive dashboards and analytical reports using <kw>Microsoft Power BI</kw> and <kw>Tableau</kw>, enabling stakeholders to monitor KPIs, track trends, and make data-driven business decisions." },
+            { text: "Built optimised, query-ready datasets in <tech>Snowflake</tech> as the serving layer for BI tools — ensuring low-latency, accurate, and consistent data delivery to reporting consumers." }
+          ]
+        }
+      ]
+    }
+  ],
+
+  projects: [
+    {
+      name: "E-Commerce Analytics Data Platform",
+      type: "End-to-End Data Engineering Project",
+      stack: ["Amazon S3", "PySpark", "Snowflake", "dbt", "AWS Glue", "Python", "Twilio", "Parquet", "JSON", "CSV"],
+      sections: [
+        {
+          title: "Platform Architecture & Design",
+          icon: "🏗",
+          bullets: [
+            { text: "Designed and implemented a full <kw>end-to-end e-commerce analytics platform</kw> to process users, orders, and payments data — architected as a multi-layer pipeline from raw ingestion through to analytics-ready serving." },
+            { text: "Established a <kw>medallion architecture</kw> (bronze → silver → gold) using <tech>Amazon S3</tech> for raw storage, <tech>Snowflake</tech> for processed layers, and <tech>dbt</tech> for gold-layer modelling." }
+          ]
+        },
+        {
+          title: "Data Ingestion Layer",
+          icon: "📥",
+          bullets: [
+            { text: "Built scalable data ingestion pipelines to load raw e-commerce data into <kw>Amazon S3</kw> supporting multiple file formats — <tech>Parquet</tech>, <tech>JSON</tech>, and <tech>CSV</tech> — with schema-aware file routing and partitioning by event date." },
+            { text: "Implemented file format validation and ingestion logging at the S3 landing zone layer, enabling audit trails and reprocessing capability for failed or partial loads." }
+          ]
+        },
+        {
+          title: "Data Transformation Layer",
+          icon: "⚙",
+          bullets: [
+            { text: "Developed <kw>PySpark-based transformation pipelines</kw> to cleanse, validate, and standardise high-volume transactional data — including null handling, type coercion, deduplication, and business rule enforcement on orders and payment records." },
+            { text: "Implemented <tech>schema evolution handling</tech> in PySpark to gracefully accommodate upstream data model changes without breaking downstream pipelines." },
+            { text: "Applied <kw>data quality checks</kw> at each transformation stage — row counts, null rates, value range validations — logged to a quality tracking table in Snowflake for observability." }
+          ]
+        },
+        {
+          title: "OTP & Notification Service",
+          icon: "🔐",
+          bullets: [
+            { text: "Developed a <kw>secure OTP generation system</kw> integrated with <tech>Twilio</tech> for reliable, time-sensitive one-time password delivery via SMS, supporting user authentication flows within the platform." },
+            { text: "Implemented OTP expiry logic, rate limiting, and delivery status logging to ensure security compliance and SMS delivery reliability." }
+          ]
+        },
+        {
+          title: "ELT & Analytics Layer",
+          icon: "📐",
+          bullets: [
+            { text: "Implemented <kw>ELT workflows in Snowflake using dbt</kw> — building modular, version-controlled data models for revenue analytics, order lifecycle metrics, and user behaviour tracking." },
+            { text: "Created <tech>dbt mart models</tech> aggregating daily revenue by category, order fulfilment rates, and user cohort retention metrics, ready for direct consumption by BI tools." },
+            { text: "Enabled business analytics and reporting by delivering optimised, query-ready <kw>Snowflake datasets</kw> with pre-computed aggregates, indexed keys, and consistent naming conventions for analyst self-service." }
+          ]
+        }
+      ]
+    }
+  ],
+
+  skills: [
+    {
+      label: "Big Data & Distributed Processing",
+      color: "green",
+      items: ["Python", "PySpark", "Spark DataFrames", "Spark RDDs", "Spark SQL", "Partition Tuning", "Broadcast Joins"]
+    },
+    {
+      label: "Cloud — Amazon Web Services (AWS)",
+      color: "orange",
+      items: ["AWS Glue", "Amazon S3", "AWS Lambda", "AWS Lake Formation", "Amazon Athena", "Glue Data Catalog", "S3 Lifecycle Policies", "Event-driven Pipelines"]
+    },
+    {
+      label: "Data Warehousing — Snowflake",
+      color: "cyan",
+      items: ["Snowflake DWH", "Snowflake Streams", "Snowflake Tasks", "Virtual Warehouses", "Clustering Keys", "Micro-partition Pruning", "Multi-layer Schemas"]
+    },
+    {
+      label: "ELT & Data Modeling — dbt",
+      color: "yellow",
+      items: ["dbt Core", "Staging / Intermediate / Mart Layers", "dbt Tests", "dbt Macros", "Jinja Templating", "Incremental Models", "DAG Lineage", "Version-controlled Transformations"]
+    },
+    {
+      label: "Data Ingestion & Storage Formats",
+      color: "purple",
+      items: ["Parquet", "Apache Iceberg", "JSON", "CSV", "Schema Validation", "Data Quality Handling", "Schema Evolution"]
+    },
+    {
+      label: "Databases & Query Languages",
+      color: "green",
+      items: ["SQL", "PL/SQL", "Advanced CTEs", "Window Functions", "Query Optimisation", "Execution Plan Analysis", "Performance Tuning"]
+    },
+    {
+      label: "Job Scheduling & Orchestration",
+      color: "cyan",
+      items: ["IBM Tivoli Workload Scheduler (TWS)", "Batch Pipeline Management", "Dependency Chains", "SLA Alerting", "Retry Logic"]
+    },
+    {
+      label: "Analytics & BI Visualisation",
+      color: "orange",
+      items: ["Microsoft Power BI", "Tableau", "Dashboard Development", "KPI Reporting", "Data Analysis & Reporting", "Data Visualisation"]
+    }
+  ],
+
+  education: [
+    { degree: "B.Tech — Computer Science & Engineering", school: "Swami Vivekanand College of Engineering", year: "Aug 2019 – Aug 2023", score: "CGPA: 7.4 / 10.0" },
+    { degree: "Class 12th (PCM)", school: "Garima Vidhya Mandir High Secondary School", year: "2018 – 2019", score: "Percentage: 69.6%" },
+    { degree: "Class 10th", school: "Neev Bal Mandir High School", year: "2017", score: "Percentage: 76.0%" }
+  ],
+
+  commands: [
+    { cmd: "help",       desc: "List all available commands" },
+    { cmd: "about",      desc: "Profile summary" },
+    { cmd: "experience", desc: "Work experience — detailed, section by section" },
+    { cmd: "projects",   desc: "Project breakdown — architecture to delivery" },
+    { cmd: "skills",     desc: "Full technical skills inventory" },
+    { cmd: "education",  desc: "Academic qualifications" },
+    { cmd: "contact",    desc: "Contact & profile links" },
+    { cmd: "clear",      desc: "Clear the terminal screen" },
+    { cmd: "exit",       desc: "End session" }
+  ]
+};
+
+// ═══════════════════════════════════════════════════════════
+//  ENGINE
+// ═══════════════════════════════════════════════════════════
+const terminal = document.getElementById('terminal');
+const input    = document.getElementById('cmd-input');
+let cmdHistory = [];
+let histIdx    = -1;
+
+function el(tag, cls, html) {
+  const e = document.createElement(tag);
+  if (cls)  e.className = cls;
+  if (html !== undefined) e.innerHTML = html;
+  return e;
+}
+
+function appendBlock(fn) {
+  const d = el('div', 'output-block');
+  fn(d);
+  terminal.appendChild(d);
+  scrollDown();
+}
+
+function scrollDown() { terminal.scrollTop = terminal.scrollHeight; }
+
+function sectionHeader(parent, icon, text) {
+  const h = el('div', 'section-header');
+  h.innerHTML = `<span>${icon}</span><span>${text}</span>`;
+  parent.appendChild(h);
+}
+
+function subsec(parent, icon, title) {
+  const s = el('div', 'subsec', `${icon} ${title}`);
+  parent.appendChild(s);
+}
+
+function bullet(parent, htmlText) {
+  const b = el('div', 'bullet');
+  b.innerHTML = `<span class="b-arrow">▸</span><span class="b-text">${htmlText}</span>`;
+  parent.appendChild(b);
+}
+
+function formatBullet(raw) {
+  // Replace <kw>, <tech>, <val> markers
+  return raw
+    .replace(/<kw>(.*?)<\/kw>/g, '<span class="kw">$1</span>')
+    .replace(/<tech>(.*?)<\/tech>/g, '<span class="tech">$1</span>')
+    .replace(/<val>(.*?)<\/val>/g, '<span class="val">$1</span>');
+}
+
+function gap(parent, h=6) {
+  const d = el('div');
+  d.style.height = h + 'px';
+  parent.appendChild(d);
+}
+
+function divider(parent) {
+  parent.appendChild(el('hr', 'divider'));
+}
+
+// ─── BANNER ───────────────────────────────────────
+function printBanner() {
+  const b = el('div', 'banner-block');
+  b.innerHTML = `
+    <div class="banner-ascii">
+ █████╗      ██╗ █████╗ ██╗   ██╗
+██╔══██╗     ██║██╔══██╗╚██╗ ██╔╝
+███████║     ██║███████║ ╚████╔╝
+██╔══██║██   ██║██╔══██║  ╚██╔╝
+██║  ██║╚█████╔╝██║  ██║   ██║
+╚═╝  ╚═╝ ╚════╝ ╚═╝  ╚═╝   ╚═╝</div>
+    <div class="banner-name">Ajay Vishwakarma</div>
+    <div class="banner-title">⬡ Data Engineer &nbsp;·&nbsp; Bangalore, India</div>
+    <div class="banner-stack">
+      <span class="banner-tag">PySpark</span>
+      <span class="banner-tag">AWS</span>
+      <span class="banner-tag">Snowflake</span>
+      <span class="banner-tag">dbt</span>
+      <span class="banner-tag">SQL / PL-SQL</span>
+      <span class="banner-tag">Python</span>
+      <span class="banner-tag">Power BI</span>
+      <span class="banner-tag">Tableau</span>
+    </div>
+    <div class="banner-meta">
+      📧 <span>ajaymsv154@gmail.com</span> &nbsp;&nbsp; 📞 <span>+91-9009046585</span> &nbsp;&nbsp; 🔗 <span>linkedin.com/in/Ajay</span>
+    </div>
+    <div class="banner-hint">
+      Type <b>help</b> to see commands &nbsp;·&nbsp; <b>↑↓</b> navigate history &nbsp;·&nbsp; <b>clear</b> to reset
+    </div>
+  `;
+  terminal.appendChild(b);
+}
+
+// ─── COMMANDS ─────────────────────────────────────
+const COMMANDS = {
+
+  help() {
+    appendBlock(div => {
+      sectionHeader(div, '⌘', 'Available Commands');
+      DATA.commands.forEach(({ cmd, desc }) => {
+        const row = el('div', 'help-row');
+        row.appendChild(el('span', 'help-cmd', cmd));
+        row.appendChild(el('span', 'help-desc', desc));
+        div.appendChild(row);
+      });
+      gap(div, 6);
+      div.appendChild(el('p', 'line', `<span class="c-gray">Tip: run </span><span class="c-green">experience</span><span class="c-gray">, </span><span class="c-green">projects</span><span class="c-gray">, </span><span class="c-green">skills</span><span class="c-gray"> for deep-dive details.</span>`));
+    });
+  },
+
+  about() {
+    const d = DATA.about;
+    appendBlock(div => {
+      sectionHeader(div, '👤', 'About');
+      const card = el('div', 'company-card');
+      card.style.borderLeftColor = 'var(--purple)';
+      card.innerHTML = `
+        <div class="co-name">${d.name}</div>
+        <div class="co-role">${d.title}</div>
+        <div class="co-meta"><span>${d.location}</span></div>
+      `;
+      div.appendChild(card);
+      gap(div, 8);
+      bullet(div, formatBullet(d.summary));
+    });
+  },
+
+  experience() {
+    appendBlock(div => {
+      sectionHeader(div, '💼', 'Work Experience');
+      DATA.experience.forEach((exp, ei) => {
+        if (ei > 0) divider(div);
+
+        // Company header card
+        const cc = el('div', 'company-card');
+        cc.innerHTML = `
+          <div class="co-name">${exp.company}</div>
+          <div class="co-role">${exp.role}</div>
+          <div class="co-meta">
+            <span>${exp.client}</span>
+            <span>${exp.duration}</span>
+            <span>${exp.location}</span>
+          </div>
+        `;
+        // Stack tags
+        const st = el('div');
+        st.style.cssText = 'margin-top:10px; display:flex; flex-wrap:wrap; gap:4px;';
+        exp.stack.forEach(s => st.appendChild(el('span', 'tag tag-green', s)));
+        cc.appendChild(st);
+        div.appendChild(cc);
+
+        // Each section
+        exp.sections.forEach(sec => {
+          gap(div, 4);
+          subsec(div, sec.icon, sec.title);
+          sec.bullets.forEach(b => bullet(div, formatBullet(b.text)));
+        });
+      });
+    });
+  },
+
+  projects() {
+    appendBlock(div => {
+      sectionHeader(div, '🚀', 'Projects');
+      DATA.projects.forEach((proj, pi) => {
+        if (pi > 0) divider(div);
+
+        const pc = el('div', 'proj-card');
+        pc.innerHTML = `
+          <div class="proj-name">${proj.name}</div>
+          <div class="proj-type">${proj.type}</div>
+        `;
+        const st = el('div', 'proj-stack');
+        proj.stack.forEach(s => st.appendChild(el('span', 'tag tag-cyan', s)));
+        pc.appendChild(st);
+        div.appendChild(pc);
+
+        proj.sections.forEach(sec => {
+          gap(div, 4);
+          subsec(div, sec.icon, sec.title);
+          sec.bullets.forEach(b => bullet(div, formatBullet(b.text)));
+        });
+      });
+    });
+  },
+
+  skills() {
+    const colorMap = {
+      green:  'tag-green',
+      cyan:   'tag-cyan',
+      yellow: 'tag-yellow',
+      orange: 'tag-orange',
+      purple: 'tag-purple',
+      gray:   'tag-gray'
+    };
+    appendBlock(div => {
+      sectionHeader(div, '🛠', 'Technical Skills');
+      DATA.skills.forEach(({ label, color, items }) => {
+        const grp = el('div', 'skill-group');
+        grp.appendChild(el('div', 'sg-label', label));
+        const wrap = el('div', 'sg-items');
+        items.forEach(item => wrap.appendChild(el('span', `tag ${colorMap[color] || 'tag-green'}`, item)));
+        grp.appendChild(wrap);
+        div.appendChild(grp);
+      });
+    });
+  },
+
+  education() {
+    appendBlock(div => {
+      sectionHeader(div, '🎓', 'Education');
+      DATA.education.forEach(edu => {
+        const c = el('div', 'edu-card');
+        c.innerHTML = `
+          <div class="edu-deg">${edu.degree}</div>
+          <div class="edu-inst">${edu.school}</div>
+          <div class="edu-meta"><span class="edu-score">${edu.score}</span> &nbsp;·&nbsp; ${edu.year}</div>
+        `;
+        div.appendChild(c);
+      });
+    });
+  },
+
+  contact() {
+    const d = DATA.about;
+    appendBlock(div => {
+      sectionHeader(div, '📬', 'Contact');
+      [
+        { key: 'Email',    val: d.email },
+        { key: 'Phone',    val: d.phone },
+        { key: 'LinkedIn', val: d.linkedin },
+        { key: 'Location', val: d.location }
+      ].forEach(({ key, val }) => {
+        const row = el('div', 'contact-row');
+        row.appendChild(el('span', 'contact-key', key));
+        row.appendChild(el('span', 'contact-val', val));
+        div.appendChild(row);
+      });
+    });
+  },
+
+  clear() {
+    terminal.innerHTML = '';
+    printBanner();
+  },
+
+  exit() {
+    appendBlock(div => {
+      div.appendChild(el('p', 'line c-gray', 'Closing session…'));
+      div.appendChild(el('p', 'line c-gray', 'Thanks for visiting! Have a great day 👋'));
+    });
+    input.disabled = true;
+    input.placeholder = 'session ended';
+  }
+};
+
+// ─── EXECUTE ──────────────────────────────────────
+function esc(s) { return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+function execCommand(raw) {
+  const cmd = raw.trim().toLowerCase();
+  appendBlock(div => {
+    div.innerHTML = `<p class="line prompt-echo"><span class="c-gdim">ajay@portfolio:~</span><span class="c-yellow"> $</span> <span class="cmd-part">${esc(raw)}</span></p>`;
+  });
+  if (!cmd) { scrollDown(); return; }
+  if (COMMANDS[cmd]) {
+    COMMANDS[cmd]();
+  } else {
+    appendBlock(div => {
+      div.appendChild(el('p', 'line c-red', `bash: ${esc(cmd)}: command not found`));
+      div.appendChild(el('p', 'line c-gray', `Type <span class="c-green">help</span> for available commands.`));
+    });
+  }
+}
+
+// ─── INPUT ────────────────────────────────────────
+input.addEventListener('keydown', e => {
+  if (e.key === 'Enter') {
+    const v = input.value;
+    if (v.trim()) { cmdHistory.unshift(v); if (cmdHistory.length > 60) cmdHistory.pop(); }
+    histIdx = -1;
+    input.value = '';
+    execCommand(v);
+    return;
+  }
+  if (e.key === 'ArrowUp') {
+    e.preventDefault();
+    if (histIdx < cmdHistory.length - 1) { histIdx++; input.value = cmdHistory[histIdx]; setTimeout(() => input.setSelectionRange(input.value.length, input.value.length), 0); }
+    return;
+  }
+  if (e.key === 'ArrowDown') {
+    e.preventDefault();
+    if (histIdx > 0) { histIdx--; input.value = cmdHistory[histIdx]; } else { histIdx = -1; input.value = ''; }
+    return;
+  }
+});
+
+terminal.addEventListener('click', () => input.focus());
+document.querySelector('.window').addEventListener('click', () => input.focus());
+
+// ─── BOOT ─────────────────────────────────────────
+printBanner();
+input.focus();
+</script>
+</body>
+</html>
